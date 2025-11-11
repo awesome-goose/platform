@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"github.com/awesome-goose/platform/contracts"
+	"github.com/awesome-goose/contracts"
 )
 
 type kernel struct {

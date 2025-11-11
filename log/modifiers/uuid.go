@@ -1,8 +1,8 @@
 package modifiers
 
 import (
-	"github.com/awesome-goose/platform/contracts"
-	"github.com/awesome-goose/platform/utils/rand"
+	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/utils/rand"
 )
 
 type UUID struct{}

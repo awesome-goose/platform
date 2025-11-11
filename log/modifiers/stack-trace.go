@@ -3,7 +3,7 @@ package modifiers
 import (
 	"runtime/debug"
 
-	"github.com/awesome-goose/platform/contracts"
+	"github.com/awesome-goose/contracts"
 )
 
 type StackTrace struct{}

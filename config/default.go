@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/awesome-goose/platform/utils/path"
+	"github.com/awesome-goose/utils/path"
 )
 
 var (

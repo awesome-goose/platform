@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/awesome-goose/platform/contracts"
+	"github.com/awesome-goose/contracts"
 )
 
 type osEnvSource struct{}

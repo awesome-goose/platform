@@ -1,6 +1,6 @@
 package log
 
-import "github.com/awesome-goose/platform/contracts"
+import "github.com/awesome-goose/contracts"
 
 type logger struct {
 	modifiers []contracts.Modifier

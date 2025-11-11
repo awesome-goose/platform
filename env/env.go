@@ -1,6 +1,6 @@
 package env
 
-import "github.com/awesome-goose/platform/contracts"
+import "github.com/awesome-goose/contracts"
 
 type env struct {
 	store map[string]string

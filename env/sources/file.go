@@ -3,8 +3,8 @@ package sources
 import (
 	"log"
 
-	"github.com/awesome-goose/platform/contracts"
-	"github.com/awesome-goose/platform/utils/path"
+	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/utils/path"
 	"github.com/spf13/viper"
 )
 

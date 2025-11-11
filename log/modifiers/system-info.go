@@ -4,7 +4,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/awesome-goose/platform/contracts"
+	"github.com/awesome-goose/contracts"
 )
 
 type SystemInfo struct{}

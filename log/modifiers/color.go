@@ -3,7 +3,7 @@ package modifiers
 import (
 	"fmt"
 
-	"github.com/awesome-goose/platform/contracts"
+	"github.com/awesome-goose/contracts"
 )
 
 type ColorTagsModifier struct{}

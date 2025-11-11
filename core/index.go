@@ -1,6 +1,6 @@
 package platform
 
-import "github.com/awesome-goose/platform/contracts"
+import "github.com/awesome-goose/contracts"
 
 var (
 	defaultKernel = NewKernel()
