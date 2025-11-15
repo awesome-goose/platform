@@ -1,19 +1,17 @@
-package platform
+package core
 
 import (
 	"github.com/awesome-goose/contracts"
 )
 
 type kernel struct {
-	container   contracts.Container
-	router      contracts.Router
+	router      contracts.RouterFinder
 	serializer  contracts.Serializer
 	transverser contracts.Transverser
 }
 
 func NewKernel() *kernel {
 	return &kernel{
-		container:   NewContainer(),
 		router:      NewRouter(),
 		serializer:  NewSerializer(),
 		transverser: NewTransverser(),
@@ -39,15 +37,14 @@ func (k *kernel) Start(platform contracts.Platform, module contracts.Module) (fu
 		return stop, err
 	}
 
-	app, err := platform.Boot(k.container)
+	app, err := platform.Boot(k.transverser.Container())
 	if err != nil {
 		return stop, err
 	}
 
 	err = app.Run(func(context contracts.Context) error {
 		routes := k.transverser.Routes()
-		segments := context.Segments()
-		route, err := k.router.Find(routes, segments)
+		route, err := k.router.Find(routes, context.Segments())
 		if err != nil {
 			return err
 		}
@@ -66,20 +63,18 @@ func (k *kernel) Start(platform contracts.Platform, module contracts.Module) (fu
 			}
 		}
 
-		// run route handler
-		// use container to call the method on the struct, dynamically injecting params, queries, marshally body where nevessary
 		output := route.Handler(context)
 		err, ok := output.(error)
 		if ok {
 			return err
 		}
 
-		buf, err := k.serializer.Serialize(output)
+		serialType, buf, err := k.serializer.Serialize(output)
 		if err != nil {
 			return err
 		}
 
-		err = context.Response().Write(buf)
+		err = context.Response().Write(serialType, buf)
 		if err != nil {
 			return err
 		}

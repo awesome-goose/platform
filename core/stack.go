@@ -1,4 +1,4 @@
-package platform
+package core
 
 type stack[T any] []any
 

@@ -1,6 +1,6 @@
 // (c) https://github.com/golobby/container/blob/v3/pkg/container/container.go
 
-package platform
+package core
 
 import (
 	"errors"

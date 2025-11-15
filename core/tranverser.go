@@ -1,4 +1,4 @@
-package platform
+package core
 
 import (
 	"fmt"
@@ -59,8 +59,13 @@ func (t *transverser) walk(module contracts.Module) error {
 			return fmt.Errorf("failed to make declaration %s: %w", declaration, err)
 		}
 
-		if route, ok := value.(contracts.Route); ok {
-			t.routes = append(t.routes, route)
+		if route, ok := value.(contracts.Router); ok {
+			routes, err := route.Routes()
+			if err != nil {
+				return fmt.Errorf("failed to get routes from router: %w", err)
+			}
+
+			t.routes = append(t.routes, routes...)
 		}
 
 		if bootable, ok := value.(contracts.OnBoot); ok {

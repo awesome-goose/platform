@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ToStruct loads a specific YAML file from disk and unmarshals it into the given struct.
+// Export loads a specific YAML file from disk and unmarshals it into the given struct.
 func (c *config) Export(namespace string, config any) error {
 	// Try both .yaml and .yml extensions
 	extensions := []string{".yaml", ".yml"}

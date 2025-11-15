@@ -1,10 +1,11 @@
-package platform
+package core
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/awesome-goose/contracts"
+	str "github.com/awesome-goose/utils/string"
 )
 
 type router struct{}
@@ -21,7 +22,21 @@ func (r *router) Find(routes contracts.Routes, segments []string) (*contracts.Ro
 	for len(segments) > 0 {
 		found := false
 
+		method := segments[0]
+		isValidMethod := str.IsValidHTTPMethod(method)
+		if isValidMethod {
+			segments = segments[1:]
+		}
+
 		for _, route := range routes {
+			if isValidMethod && route.Method == "" {
+				continue
+			}
+
+			if isValidMethod && route.Method != "" && route.Method != contracts.Method(method) {
+				continue
+			}
+
 			match, consumed := r.match(route.Path, segments)
 			if match {
 				current = route
