@@ -9,6 +9,10 @@ import (
 
 type JSON struct{}
 
+func NewJSON() *JSON {
+	return &JSON{}
+}
+
 func (j *JSON) Format(record contracts.Record) []byte {
 	b, err := json.Marshal(record)
 	if err != nil {

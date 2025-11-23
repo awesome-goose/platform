@@ -8,6 +8,10 @@ import (
 
 type StackTrace struct{}
 
+func NewStackTrace() *StackTrace {
+	return &StackTrace{}
+}
+
 func (m *StackTrace) Modify(record contracts.Record) contracts.Record {
 	trace := debug.Stack()
 	record.Extra = append(record.Extra, map[string]any{

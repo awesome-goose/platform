@@ -9,6 +9,10 @@ import (
 
 type Line struct{}
 
+func NewLine() *Line {
+	return &Line{}
+}
+
 func (f *Line) Format(record contracts.Record) []byte {
 	extra := ""
 	if len(record.Extra) > 0 {

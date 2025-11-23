@@ -2,11 +2,11 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/platform/errors"
 )
 
 type serializer struct{}
@@ -24,6 +24,10 @@ func (s *serializer) walk(value any) (contracts.SerialType, []byte, error) {
 		return contracts.SerialTypeNil, nil, nil
 	}
 
+	if errVal, ok := value.(error); ok {
+		return contracts.SerialTypeError, []byte(errVal.Error()), nil
+	}
+
 	rv := reflect.ValueOf(value)
 
 	if rv.Kind() == reflect.Ptr {
@@ -31,6 +35,10 @@ func (s *serializer) walk(value any) (contracts.SerialType, []byte, error) {
 			return contracts.SerialTypeNil, nil, nil
 		}
 		return s.walk(rv.Elem().Interface())
+	}
+
+	if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		return contracts.SerialTypeBinary, rv.Bytes(), nil
 	}
 
 	switch rv.Kind() {
@@ -52,11 +60,11 @@ func (s *serializer) walk(value any) (contracts.SerialType, []byte, error) {
 	case reflect.Struct, reflect.Map, reflect.Slice, reflect.Array:
 		b, err := json.Marshal(value)
 		if err != nil {
-			return contracts.SerialTypeNil, nil, fmt.Errorf("serialize: json marshal failed: %w", err)
+			return contracts.SerialTypeNil, nil, errors.JSONMARSHALFAILED.WithError(err)
 		}
 		return contracts.SerialTypeObject, b, nil
 
 	default:
-		return contracts.SerialTypeNil, nil, fmt.Errorf("serialize: unsupported type: %s", rv.Kind())
+		return contracts.SerialTypeNil, nil, errors.UNSUPPORTEDTYPE.WithMeta(rv.Kind())
 	}
 }

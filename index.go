@@ -1,6 +1,9 @@
 package platform
 
-import "github.com/awesome-goose/contracts"
+import (
+	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/platform/core"
+)
 
 var (
 	defaultKernel = core.NewKernel()

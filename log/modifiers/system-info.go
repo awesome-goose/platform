@@ -9,6 +9,10 @@ import (
 
 type SystemInfo struct{}
 
+func NewSystemInfo() *SystemInfo {
+	return &SystemInfo{}
+}
+
 func (m *SystemInfo) Modify(record contracts.Record) contracts.Record {
 	hostname, _ := os.Hostname()
 

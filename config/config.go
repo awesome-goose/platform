@@ -5,15 +5,32 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/awesome-goose/utils/path"
 	"gopkg.in/yaml.v3"
 )
 
-type config struct {
+type AppConfigPath string
+
+func (p AppConfigPath) String() string {
+	return string(p)
+}
+
+type Config struct {
 	dir  string
 	tree map[string]any
 }
 
-func newConfig(dir string) (*config, error) {
+func NewConfig(appPath AppConfigPath) (*Config, error) {
+	dir := appPath.String()
+	if dir == "" {
+		defaultDir, err := path.Config()
+		if err != nil {
+			panic("failed to resolve config path: " + err.Error())
+		}
+
+		dir = defaultDir
+	}
+
 	tree := map[string]any{}
 
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -45,16 +62,16 @@ func newConfig(dir string) (*config, error) {
 		return nil, err
 	}
 
-	return &config{
+	return &Config{
 		tree: tree,
 		dir:  dir,
 	}, nil
 }
 
-func (c *config) Dir() string {
+func (c *Config) Dir() string {
 	return c.dir
 }
 
-func (c *config) Tree() map[string]any {
+func (c *Config) Tree() map[string]any {
 	return c.tree
 }

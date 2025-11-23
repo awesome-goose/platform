@@ -13,6 +13,13 @@ type Syslog struct {
 	PID     int
 }
 
+func NewSyslog(appName string, pid int) *Syslog {
+	return &Syslog{
+		AppName: appName,
+		PID:     pid,
+	}
+}
+
 func (f *Syslog) Format(record contracts.Record) []byte {
 	if f.PID == 0 {
 		f.PID = os.Getpid()

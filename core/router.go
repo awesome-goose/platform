@@ -1,10 +1,10 @@
 package core
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/platform/errors"
 	str "github.com/awesome-goose/utils/string"
 )
 
@@ -14,20 +14,15 @@ func NewRouter() *router {
 	return &router{}
 }
 
-func (r *router) Find(routes contracts.Routes, segments []string) (*contracts.Route, error) {
+func (r *router) Find(routes contracts.Routes, method string, paths []string) (*contracts.Route, error) {
 	var mergedMiddlewares []contracts.Middleware
 	var mergedValidators []contracts.Validator
 	var current contracts.Route
 
-	for len(segments) > 0 {
+	for len(paths) > 0 {
 		found := false
 
-		method := segments[0]
 		isValidMethod := str.IsValidHTTPMethod(method)
-		if isValidMethod {
-			segments = segments[1:]
-		}
-
 		for _, route := range routes {
 			if isValidMethod && route.Method == "" {
 				continue
@@ -37,12 +32,12 @@ func (r *router) Find(routes contracts.Routes, segments []string) (*contracts.Ro
 				continue
 			}
 
-			match, consumed := r.match(route.Path, segments)
+			match, consumed := r.match(route.Path, paths)
 			if match {
 				current = route
 				mergedMiddlewares = append(mergedMiddlewares, route.Middlewares...)
 				mergedValidators = append(mergedValidators, route.Validators...)
-				segments = segments[consumed:]
+				paths = paths[consumed:]
 				routes = route.Children
 				found = true
 				break
@@ -50,7 +45,7 @@ func (r *router) Find(routes contracts.Routes, segments []string) (*contracts.Ro
 		}
 
 		if !found {
-			return nil, fmt.Errorf("no route match for segments: %v", segments)
+			return nil, errors.ErrNoRouteMatch.WithMeta(paths)
 		}
 	}
 
@@ -59,9 +54,9 @@ func (r *router) Find(routes contracts.Routes, segments []string) (*contracts.Ro
 	return &current, nil
 }
 
-func (r *router) match(path string, segments []string) (bool, int) {
+func (r *router) match(path string, paths []string) (bool, int) {
 	routeSegs := r.split(path)
-	if len(routeSegs) > len(segments) {
+	if len(routeSegs) > len(paths) {
 		return false, 0
 	}
 
@@ -69,7 +64,7 @@ func (r *router) match(path string, segments []string) (bool, int) {
 		if strings.HasPrefix(seg, ":") {
 			continue
 		}
-		if seg != segments[i] {
+		if seg != paths[i] {
 			return false, 0
 		}
 	}

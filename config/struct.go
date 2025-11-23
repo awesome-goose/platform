@@ -2,15 +2,16 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/awesome-goose/platform/errors"
 )
 
 // Export loads a specific YAML file from disk and unmarshals it into the given struct.
-func (c *config) Export(namespace string, config any) error {
+func (c *Config) Export(namespace string, config any) error {
 	// Try both .yaml and .yml extensions
 	extensions := []string{".yaml", ".yml"}
 
@@ -26,36 +27,36 @@ func (c *config) Export(namespace string, config any) error {
 	}
 
 	if !found {
-		return fmt.Errorf("config file for namespace '%s' not found", namespace)
+		return errors.ErrConfigFileNotFound.WithMeta(namespace)
 	}
 
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return errors.ErrFailedToReadConfigFile.WithError(err)
 	}
 
 	if err := yaml.Unmarshal(content, config); err != nil {
-		return fmt.Errorf("failed to unmarshal config to struct: %w", err)
+		return errors.ErrFailedToUnmarshalConfigToStruct.WithError(err)
 	}
 
 	return nil
 }
 
-func (c *config) Import(namespace string, in any) error {
+func (c *Config) Import(namespace string, in any) error {
 	if namespace == "" {
-		return fmt.Errorf("namespace is required")
+		return errors.ErrNamespaceRequired
 	}
 
 	// Marshal the struct to JSON first
 	bytes, err := json.Marshal(in)
 	if err != nil {
-		return fmt.Errorf("failed to marshal struct: %w", err)
+		return errors.ErrFailedToMarshalStruct.WithError(err)
 	}
 
 	// Unmarshal back to map[string]any
 	var asMap map[string]any
 	if err := json.Unmarshal(bytes, &asMap); err != nil {
-		return fmt.Errorf("failed to convert struct to map: %w", err)
+		return errors.ErrFailedToConvertStructToMap.WithError(err)
 	}
 
 	// Store in the internal tree

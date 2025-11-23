@@ -1,11 +1,12 @@
 package processors
 
 import (
-	"errors"
 	"log/syslog"
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/awesome-goose/platform/errors"
 )
 
 type Syslog struct {
@@ -15,7 +16,7 @@ type Syslog struct {
 func NewSyslog(tag string) (*Syslog, error) {
 	// 1. OS compatibility check
 	if runtime.GOOS == "windows" {
-		return nil, errors.New("syslog is not supported on Windows")
+		return nil, errors.ErrSyslogNotSupported
 	}
 
 	// 2. Permissions check: try writing a test line
@@ -23,7 +24,7 @@ func NewSyslog(tag string) (*Syslog, error) {
 	if err != nil {
 		// Try to distinguish permission errors
 		if errno, ok := err.(syscall.Errno); ok && errno == syscall.EPERM {
-			return nil, errors.New("permission denied: cannot write to syslog")
+			return nil, errors.ErrSyslogPermissionDenied
 		}
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func NewSyslog(tag string) (*Syslog, error) {
 	testMsg := "[syslog-test] checking permissions"
 	if testErr := writer.Info(testMsg); testErr != nil {
 		writer.Close()
-		return nil, errors.New("unable to write to syslog: " + testErr.Error())
+		return nil, errors.ErrSyslogWriteFailed.WithError(testErr)
 	}
 
 	return &Syslog{writer: writer}, nil

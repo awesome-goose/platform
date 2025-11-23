@@ -1,22 +1,23 @@
 package config
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/awesome-goose/platform/errors"
 )
 
 // Get retrieves a value using dotted path (e.g., "db.host") and renders {{ENV_VAR}}.
-func (c *config) Get(path string) (any, error) {
+func (c *Config) Get(path string) (any, error) {
 	parts := strings.Split(path, ".")
 	current := any(c.tree)
 	for _, part := range parts {
 		m, ok := current.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("path %s not found (at %s)", path, part)
+			return nil, errors.ErrPathNotFound.WithMeta(path)
 		}
 		current, ok = m[part]
 		if !ok {
-			return nil, fmt.Errorf("key '%s' not found in path '%s'", part, path)
+			return nil, errors.ErrKeyNotFound.WithMeta(path)
 		}
 	}
 	if str, ok := current.(string); ok {
@@ -26,7 +27,7 @@ func (c *config) Get(path string) (any, error) {
 }
 
 // Set sets a value using dotted path (e.g., "db.host").
-func (c *config) Set(path string, value any) error {
+func (c *Config) Set(path string, value any) error {
 	parts := strings.Split(path, ".")
 	lastKey := parts[len(parts)-1]
 	current := c.tree
@@ -38,7 +39,7 @@ func (c *config) Set(path string, value any) error {
 		}
 		asMap, ok := next.(map[string]any)
 		if !ok {
-			return fmt.Errorf("cannot set key on non-map value at '%s'", part)
+			return errors.ErrInvalidSet.WithMeta(path)
 		}
 		current = asMap
 	}

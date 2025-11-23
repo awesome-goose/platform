@@ -7,6 +7,10 @@ import (
 
 type UUID struct{}
 
+func NewUUID() *UUID {
+	return &UUID{}
+}
+
 func (m *UUID) Modify(record contracts.Record) contracts.Record {
 	record.Extra = append(record.Extra, map[string]any{
 		"id": rand.UUID(),

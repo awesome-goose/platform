@@ -1,24 +1,21 @@
 package core
 
 import (
-	"fmt"
-
 	"github.com/awesome-goose/contracts"
+	"github.com/awesome-goose/platform/errors"
 )
 
 type transverser struct {
 	container       contracts.Container
-	routes          contracts.Routes
-	onBootStack     contracts.Stack[func() error]
-	onShutdownStack contracts.Stack[func() error]
+	onBootStack     contracts.Stack[func(contracts.Kernel) error]
+	onShutdownStack contracts.Stack[func(contracts.Kernel) error]
 }
 
 func NewTransverser() *transverser {
 	return &transverser{
 		container:       NewContainer(),
-		routes:          []contracts.Route{},
-		onBootStack:     NewStack[func() error](),
-		onShutdownStack: NewStack[func() error](),
+		onBootStack:     NewStack[func(contracts.Kernel) error](),
+		onShutdownStack: NewStack[func(contracts.Kernel) error](),
 	}
 }
 
@@ -30,23 +27,37 @@ func (t *transverser) Container() contracts.Container {
 	return t.container
 }
 
-func (t *transverser) Routes() []contracts.Route {
-	return t.routes
-}
-
-func (t *transverser) OnBootHooks() contracts.Stack[func() error] {
+func (t *transverser) OnBootHooks() contracts.Stack[func(contracts.Kernel) error] {
 	return t.onBootStack
 }
 
-func (t *transverser) OnShutdownHooks() contracts.Stack[func() error] {
+func (t *transverser) OnShutdownHooks() contracts.Stack[func(contracts.Kernel) error] {
 	return t.onShutdownStack
 }
 
 func (t *transverser) walk(module contracts.Module) error {
-	declarations := module.Declarations
+	i, err := t.container.Make(module)
+	if err != nil {
+		return err
+	}
 
-	for _, imp := range module.Imports {
-		declarations = append(declarations, imp.Exports...)
+	m, ok := i.(contracts.Module)
+	if !ok {
+		return errors.ErrInvalidModuleInstance
+	}
+
+	if bootable, ok := m.(contracts.Bootable); ok {
+		t.onBootStack.Push(bootable.Boot)
+	}
+
+	if shutdownable, ok := m.(contracts.Shutdownable); ok {
+		t.onShutdownStack.Push(shutdownable.Shutdown)
+	}
+
+	declarations := m.Declarations()
+
+	for _, imp := range m.Imports() {
+		declarations = append(declarations, imp.Exports()...)
 
 		if err := t.walk(imp); err != nil {
 			return err
@@ -56,23 +67,14 @@ func (t *transverser) walk(module contracts.Module) error {
 	for _, declaration := range declarations {
 		value, err := t.container.Make(declaration)
 		if err != nil {
-			return fmt.Errorf("failed to make declaration %s: %w", declaration, err)
+			return errors.ErrFailedToMakeDeclaration.WithError(err)
 		}
 
-		if route, ok := value.(contracts.Router); ok {
-			routes, err := route.Routes()
-			if err != nil {
-				return fmt.Errorf("failed to get routes from router: %w", err)
-			}
-
-			t.routes = append(t.routes, routes...)
-		}
-
-		if bootable, ok := value.(contracts.OnBoot); ok {
+		if bootable, ok := value.(contracts.Bootable); ok {
 			t.onBootStack.Push(bootable.Boot)
 		}
 
-		if shutdownable, ok := value.(contracts.OnShutdown); ok {
+		if shutdownable, ok := value.(contracts.Shutdownable); ok {
 			t.onShutdownStack.Push(shutdownable.Shutdown)
 		}
 	}

@@ -8,6 +8,10 @@ import (
 
 type ColorTagsModifier struct{}
 
+func NewColorTagsModifier() *ColorTagsModifier {
+	return &ColorTagsModifier{}
+}
+
 func (m *ColorTagsModifier) Modify(record contracts.Record) contracts.Record {
 	colorStart := ""
 	colorEnd := "\033[0m" // Reset code

@@ -6,31 +6,53 @@ import (
 	"github.com/awesome-goose/contracts"
 )
 
-type log struct {
-	channels map[string][]*logger
+type AppLogChannel string
+
+func (c AppLogChannel) String() string {
+	return string(c)
+}
+
+type AppLoggers []*Logger
+
+type Log struct {
+	channels map[string][]*Logger
 	channel  string
 }
 
-func newLog(channel string, loggers ...*logger) *log {
-	l := &log{}
-	l.channels = make(map[string][]*logger)
+func NewLog(appChannel AppLogChannel, loggers ...*Logger) *Log {
+	channel := appChannel.String()
+	if channel == "" {
+		channel = "noop"
+		loggers = []*Logger{
+			NewLogger(
+				[]contracts.Modifier{
+					NewNoopModifier(),
+				},
+				NewNoopFormatter(),
+				NewNoopProcessor(),
+			),
+		}
+	}
+
+	l := &Log{}
+	l.channels = make(map[string][]*Logger)
 	l.channels[channel] = loggers
 
 	return l.Use(channel)
 }
 
-func (l *log) Use(channel string) *log {
+func (l *Log) Use(channel string) *Log {
 	log := *l
 	log.channel = channel
 	return &log
 }
 
-func (l *log) Add(channel string, loggers ...*logger) *log {
+func (l *Log) Add(channel string, loggers ...*Logger) *Log {
 	l.channels[channel] = append(l.channels[channel], loggers...)
 	return l.Use(channel)
 }
 
-func (l *log) Debug(message string, extra ...any) {
+func (l *Log) Debug(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -40,7 +62,7 @@ func (l *log) Debug(message string, extra ...any) {
 	})
 }
 
-func (l *log) Info(message string, extra ...any) {
+func (l *Log) Info(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -50,7 +72,7 @@ func (l *log) Info(message string, extra ...any) {
 	})
 }
 
-func (l *log) Notice(message string, extra ...any) {
+func (l *Log) Notice(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -60,7 +82,7 @@ func (l *log) Notice(message string, extra ...any) {
 	})
 }
 
-func (l *log) Warning(message string, extra ...any) {
+func (l *Log) Warning(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -70,7 +92,7 @@ func (l *log) Warning(message string, extra ...any) {
 	})
 }
 
-func (l *log) Error(message string, extra ...any) {
+func (l *Log) Error(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -80,7 +102,7 @@ func (l *log) Error(message string, extra ...any) {
 	})
 }
 
-func (l *log) Critical(message string, extra ...any) {
+func (l *Log) Critical(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -90,7 +112,7 @@ func (l *log) Critical(message string, extra ...any) {
 	})
 }
 
-func (l *log) Alert(message string, extra ...any) {
+func (l *Log) Alert(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -100,7 +122,7 @@ func (l *log) Alert(message string, extra ...any) {
 	})
 }
 
-func (l *log) Emergency(message string, extra ...any) {
+func (l *Log) Emergency(message string, extra ...any) {
 	l.log(contracts.Record{
 		Datetime: time.Now(),
 		Channel:  l.channel,
@@ -110,7 +132,7 @@ func (l *log) Emergency(message string, extra ...any) {
 	})
 }
 
-func (l *log) log(records ...contracts.Record) {
+func (l *Log) log(records ...contracts.Record) {
 	loggers, ok := l.channels[l.channel]
 	if !ok {
 		panic("No loggers found for channel: " + l.channel)
